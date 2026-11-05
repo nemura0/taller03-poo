@@ -1,1 +1,7 @@
-/bin/
+# archivos compilados
+bin/
+*.class
+
+# basura del sistema
+.DS_Store
+Thumbs.db
