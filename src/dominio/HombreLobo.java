@@ -38,6 +38,11 @@ public class HombreLobo extends Monstruo implements Mordedor, Furioso {
 	}
 
 	@Override
+	public double aceptar(VisitorMinijuego visitor) {
+		return visitor.visitar(this);
+	}
+
+	@Override
 	public String morder() {
 		return "¡El hombre lobo muerde con una ferocidad de " + ferocidad + "!";
 	}

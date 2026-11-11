@@ -31,6 +31,11 @@ public class Momia extends Monstruo implements Regenerable, Furioso {
 	}
 
 	@Override
+	public double aceptar(VisitorMinijuego visitor) {
+		return visitor.visitar(this);
+	}
+
+	@Override
 	public String regenerarse() {
 		return "La momia se enrolla " + longitudVendajes + " metros de vendas nuevas.";
 	}
