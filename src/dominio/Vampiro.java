@@ -39,6 +39,11 @@ public class Vampiro extends Monstruo implements Mordedor, Volador {
 	}
 
 	@Override
+	public double aceptar(VisitorMinijuego visitor) {
+		return visitor.visitar(this);
+	}
+
+	@Override
 	public String morder() {
 		return "¡El vampiro muestra los colmillos y da un mordisco rápido!";
 	}

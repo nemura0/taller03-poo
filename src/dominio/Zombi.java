@@ -31,6 +31,11 @@ public class Zombi extends Monstruo implements Mordedor, Regenerable {
 	}
 
 	@Override
+	public double aceptar(VisitorMinijuego visitor) {
+		return visitor.visitar(this);
+	}
+
+	@Override
 	public String morder() {
 		return "¡El zombi clava los dientes con una mordida de fuerza " + fuerzaMordida + "!";
 	}

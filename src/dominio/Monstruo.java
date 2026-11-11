@@ -50,6 +50,16 @@ public abstract class Monstruo {
 	public abstract String getTipo();
 
 	/**
+	 * recibe un minijuego (visitor) y le pide que calcule el potencial de este
+	 * monstruo. cada subclase llama a visitor.visitar(this) para que se use la
+	 * fórmula de su tipo.
+	 *
+	 * @param visitor el minijuego que calcula el potencial
+	 * @return el potencial del monstruo en ese minijuego
+	 */
+	public abstract double aceptar(VisitorMinijuego visitor);
+
+	/**
 	 * arma el texto con el tipo y los atributos base. cada subclase le agrega
 	 * sus atributos propios al final.
 	 */
