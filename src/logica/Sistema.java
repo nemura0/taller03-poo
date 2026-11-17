@@ -225,4 +225,39 @@ public interface Sistema {
 	 * @return el puntaje obtenido: Math.round(potencial x 10 x multiplicador)
 	 */
 	int jugarMinijuego(int indiceMinijuego, int posicion, String habilidad);
+
+	// ---------------- catálogo, historial y ranking ----------------
+
+	/**
+	 * @return cuántos minijuegos se han jugado en la sesión actual
+	 */
+	int getCantidadJugadas();
+
+	/**
+	 * arma el catálogo con todos los monstruos cargados, sus atributos, sus
+	 * habilidades y si ya se usaron en la sesión actual.
+	 *
+	 * @return el catálogo listo para mostrar, una entrada por monstruo
+	 */
+	String obtenerCatalogo();
+
+	/**
+	 * arma el historial de la sesión en el orden en que se jugó: minijuego,
+	 * monstruo, habilidad usada (o "Ninguna") y puntaje.
+	 *
+	 * @return el historial listo para mostrar, o un texto vacío si no se ha jugado nada
+	 */
+	String obtenerHistorial();
+
+	/**
+	 * arma el ranking de jugadores ordenado de mayor a menor récord. si hay
+	 * empate, se ordena por nombre alfabéticamente. el orden lo hace el
+	 * sistema (sin Collections.sort).
+	 *
+	 * POST:
+	 * - los registros no cambian, se ordena una copia
+	 *
+	 * @return el ranking listo para mostrar, o un texto vacío si no hay jugadores
+	 */
+	String obtenerRanking();
 }
