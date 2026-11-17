@@ -247,6 +247,73 @@ public class SistemaImpl implements Sistema {
 		return puntaje;
 	}
 
+	// ---------------- catálogo, historial y ranking ----------------
+
+	@Override
+	public int getCantidadJugadas() {
+		return historial.size();
+	}
+
+	@Override
+	public String obtenerCatalogo() {
+		String catalogo = "";
+		for (int i = 0; i < monstruos.size(); i++) {
+			Monstruo monstruo = monstruos.get(i);
+			String estado = "[DISPONIBLE]";
+			if (fueUsado(monstruo)) {
+				estado = "[USADO]";
+			}
+			catalogo += rellenar((i + 1) + ")", 3) + " " + monstruo + "\n";
+			catalogo += "    Habilidades: " + rellenar(unirHabilidades(habilidadesDe(monstruo)), 25) + estado
+					+ "\n";
+		}
+		return catalogo;
+	}
+
+	@Override
+	public String obtenerHistorial() {
+		String texto = "";
+		int numero = 1;
+		// la LinkedList guarda las jugadas en el orden en que se hicieron
+		for (Jugada jugada : historial) {
+			texto += numero + ". " + rellenar(jugada.getMinijuego().getNombre(), 23) + "| "
+					+ rellenar(jugada.getMonstruo().getTipo(), 11) + "| Habilidad: "
+					+ rellenar(jugada.getHabilidad(), 12) + "| " + jugada.getPuntaje() + " pts\n";
+			numero++;
+		}
+		return texto;
+	}
+
+	@Override
+	public String obtenerRanking() {
+		// se ordena una copia para no desordenar los registros
+		ArrayList<Jugador> ranking = new ArrayList<>(jugadores);
+		int n = ranking.size();
+
+		// ordenamiento por intercambio: en cada vuelta queda el mejor en la posición a
+		for (int a = 0; a < n - 1; a++) {
+			for (int b = a + 1; b < n; b++) {
+				Jugador ja = ranking.get(a);
+				Jugador jb = ranking.get(b);
+				if (jb.getPuntajeMaximo() > ja.getPuntajeMaximo()) {
+					intercambiar(ranking, a, b);
+				} else if (jb.getPuntajeMaximo() == ja.getPuntajeMaximo()
+						&& jb.getNombre().compareTo(ja.getNombre()) < 0) {
+					// empate: va primero el nombre que va antes alfabéticamente
+					intercambiar(ranking, a, b);
+				}
+			}
+		}
+
+		String texto = "";
+		for (int i = 0; i < n; i++) {
+			Jugador jugador = ranking.get(i);
+			texto += rellenar((i + 1) + ".", 4) + rellenar(jugador.getNombre(), 15) + jugador.getPuntajeMaximo()
+					+ "\n";
+		}
+		return texto;
+	}
+
 	// ---------------- métodos auxiliares ----------------
 
 	/**
@@ -335,6 +402,40 @@ public class SistemaImpl implements Sistema {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * intercambia dos jugadores de una lista.
+	 */
+	private void intercambiar(ArrayList<Jugador> lista, int a, int b) {
+		Jugador temporal = lista.get(a);
+		lista.set(a, lista.get(b));
+		lista.set(b, temporal);
+	}
+
+	/**
+	 * junta las habilidades separadas por coma, por ejemplo "Morder, Volar".
+	 */
+	private String unirHabilidades(String[] habilidades) {
+		String texto = "";
+		for (int i = 0; i < habilidades.length; i++) {
+			if (i > 0) {
+				texto += ", ";
+			}
+			texto += habilidades[i];
+		}
+		return texto;
+	}
+
+	/**
+	 * agrega espacios a la derecha hasta completar el largo pedido.
+	 */
+	private String rellenar(String texto, int largo) {
+		String resultado = texto;
+		while (resultado.length() < largo) {
+			resultado = resultado + " ";
+		}
+		return resultado;
 	}
 
 	/**
