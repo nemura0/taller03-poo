@@ -106,13 +106,20 @@ public class Main {
 			case 1:
 				jugarMinijuego();
 				break;
+			case 2:
+				mostrarCatalogo();
+				break;
+			case 3:
+				mostrarHistorial();
+				break;
+			case 4:
+				mostrarRanking();
+				break;
 			case 5:
 				System.out.println("Sesión terminada.");
 				return false;
 			case 6:
 				return true;
-			default:
-				System.out.println("[!] Opción en construcción.");
 			}
 		}
 	}
@@ -234,6 +241,44 @@ public class Main {
 			System.out.println("La habilidad no tuvo efecto en este minijuego.");
 		}
 		return habilidad;
+	}
+
+	// ---------------- catálogo, historial y ranking ----------------
+
+	/**
+	 * muestra todos los monstruos cargados, sus habilidades y si ya se usaron.
+	 */
+	private static void mostrarCatalogo() {
+		System.out.println();
+		System.out.println("------ CATÁLOGO DE MONSTRUOS ------");
+		System.out.print(sistema.obtenerCatalogo());
+	}
+
+	/**
+	 * muestra lo jugado en la sesión y el puntaje acumulado.
+	 */
+	private static void mostrarHistorial() {
+		System.out.println();
+		System.out.println("------ HISTORIAL DE LA SESIÓN ------");
+		if (sistema.getCantidadJugadas() == 0) {
+			System.out.println("Aún no has jugado ningún minijuego en esta sesión.");
+			return;
+		}
+		System.out.print(sistema.obtenerHistorial());
+		System.out.println("Puntaje acumulado: " + sistema.getPuntajeSesion() + " pts");
+	}
+
+	/**
+	 * muestra el ranking de jugadores registrados.
+	 */
+	private static void mostrarRanking() {
+		System.out.println();
+		System.out.println("------ RANKING ------");
+		if (sistema.getCantidadJugadores() == 0) {
+			System.out.println("Todavía no hay jugadores registrados.");
+			return;
+		}
+		System.out.print(sistema.obtenerRanking());
 	}
 
 	// ---------------- lectura de opciones y formato ----------------
