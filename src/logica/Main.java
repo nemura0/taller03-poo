@@ -3,8 +3,11 @@
 
 package logica;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -116,9 +119,11 @@ public class Main {
 				mostrarRanking();
 				break;
 			case 5:
-				System.out.println("Sesión terminada.");
+				terminarSesion(nombre);
 				return false;
 			case 6:
+				// salir también termina la sesión y guarda
+				terminarSesion(nombre);
 				return true;
 			}
 		}
@@ -279,6 +284,56 @@ public class Main {
 			return;
 		}
 		System.out.print(sistema.obtenerRanking());
+	}
+
+	// ---------------- terminar sesión y guardar ----------------
+
+	/**
+	 * termina la sesión, muestra cómo le fue al jugador con su récord y
+	 * reescribe Registros.txt si hubo cambios.
+	 *
+	 * @param nombre nombre del jugador de la sesión
+	 */
+	private static void terminarSesion(String nombre) {
+		int puntajeTotal = sistema.getPuntajeSesion();
+		int recordAnterior = sistema.obtenerRecord(nombre);
+		int resultado = sistema.terminarSesion();
+
+		System.out.println();
+		System.out.println("Sesión terminada. Puntaje total: " + puntajeTotal + " puntos.");
+		switch (resultado) {
+		case 0:
+			System.out.println("No jugaste ningún minijuego, no se guardó registro.");
+			return;
+		case 1:
+			System.out.println("¡Quedaste registrado con " + puntajeTotal + " puntos!");
+			break;
+		case 2:
+			System.out.println("¡Felicidades! Superaste tu récord anterior (" + recordAnterior
+					+ "). Tu nuevo récord es " + puntajeTotal + " puntos.");
+			break;
+		case 3:
+			System.out.println("No superaste tu récord (" + recordAnterior + "). ¡Suerte para la próxima!");
+			break;
+		}
+		guardarRegistros();
+	}
+
+	/**
+	 * reescribe Registros.txt con todos los jugadores y sus récords.
+	 */
+	private static void guardarRegistros() {
+		try {
+			BufferedWriter escritor = new BufferedWriter(new FileWriter("Registros.txt"));
+			for (int i = 0; i < sistema.getCantidadJugadores(); i++) {
+				escritor.write(sistema.obtenerLineaRegistro(i));
+				escritor.newLine();
+			}
+			escritor.close();
+			System.out.println("Registros guardados en Registros.txt.");
+		} catch (IOException e) {
+			System.out.println("[!] No se pudo guardar Registros.txt: " + e.getMessage());
+		}
 	}
 
 	// ---------------- lectura de opciones y formato ----------------
