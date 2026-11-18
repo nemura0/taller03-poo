@@ -75,6 +75,7 @@ public class Main {
 			if (nombre == null) {
 				return null;
 			}
+			nombre = nombre.trim();
 			if (nombre.length() == 0) {
 				System.out.println("[!] El nombre no puede estar vacío.");
 			} else if (nombre.indexOf(";") != -1) {
