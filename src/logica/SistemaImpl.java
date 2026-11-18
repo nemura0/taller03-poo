@@ -314,6 +314,37 @@ public class SistemaImpl implements Sistema {
 		return texto;
 	}
 
+	// ---------------- terminar sesión y persistencia ----------------
+
+	@Override
+	public int terminarSesion() {
+		int resultado;
+		int puntaje = getPuntajeSesion();
+		Jugador jugador = buscarJugador(jugadorActual);
+
+		if (historial.isEmpty()) {
+			resultado = 0;
+		} else if (jugador == null) {
+			jugadores.add(new Jugador(jugadorActual, puntaje));
+			resultado = 1;
+		} else if (puntaje > jugador.getPuntajeMaximo()) {
+			jugador.setPuntajeMaximo(puntaje);
+			resultado = 2;
+		} else {
+			resultado = 3;
+		}
+
+		historial.clear();
+		jugadorActual = null;
+		return resultado;
+	}
+
+	@Override
+	public String obtenerLineaRegistro(int indice) {
+		Jugador jugador = jugadores.get(indice);
+		return jugador.getNombre() + ";" + jugador.getPuntajeMaximo();
+	}
+
 	// ---------------- métodos auxiliares ----------------
 
 	/**

@@ -260,4 +260,31 @@ public interface Sistema {
 	 * @return el ranking listo para mostrar, o un texto vacío si no hay jugadores
 	 */
 	String obtenerRanking();
+
+	// ---------------- terminar sesión y persistencia ----------------
+
+	/**
+	 * termina la sesión actual y actualiza los registros.
+	 *
+	 * POST:
+	 * - si el jugador jugó al menos un minijuego y es nuevo, queda registrado
+	 *   con el puntaje de la sesión
+	 * - si ya existía y superó su récord, el récord se actualiza
+	 * - si no superó su récord, se mantiene el anterior
+	 * - la sesión queda cerrada
+	 *
+	 * @return 0 si no jugó ningún minijuego (no se registra nada),
+	 *         1 si era un jugador nuevo y quedó registrado,
+	 *         2 si superó su récord y se actualizó,
+	 *         3 si no superó su récord
+	 */
+	int terminarSesion();
+
+	/**
+	 * retorna un jugador en el formato de Registros.txt (Jugador;PuntajeMaximo).
+	 *
+	 * @param indice posición del jugador, entre 0 y getCantidadJugadores() - 1
+	 * @return la línea para guardar en el archivo
+	 */
+	String obtenerLineaRegistro(int indice);
 }
