@@ -3,8 +3,11 @@
 
 package logica;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -39,7 +42,12 @@ public class Main {
 		boolean salir = false;
 		while (!salir) {
 			String nombre = iniciarSesion();
-			salir = menuPrincipal(nombre);
+			if (nombre == null) {
+				// se cerró la entrada antes de ingresar un nombre
+				salir = true;
+			} else {
+				salir = menuPrincipal(nombre);
+			}
 		}
 		teclado.close();
 		System.out.println("¡Hasta la próxima noche de brujas!");
@@ -51,7 +59,7 @@ public class Main {
 	 * pide el nombre de usuario hasta que sea válido, da la bienvenida e inicia
 	 * una sesión nueva en el sistema.
 	 *
-	 * @return el nombre del jugador que inició sesión
+	 * @return el nombre del jugador que inició sesión, o null si se cerró la entrada
 	 */
 	private static String iniciarSesion() {
 		System.out.println();
@@ -63,7 +71,10 @@ public class Main {
 		boolean valido = false;
 		while (!valido) {
 			System.out.print("Ingrese su nombre de usuario: ");
-			nombre = teclado.nextLine();
+			nombre = leerLinea();
+			if (nombre == null) {
+				return null;
+			}
 			if (nombre.length() == 0) {
 				System.out.println("[!] El nombre no puede estar vacío.");
 			} else if (nombre.indexOf(";") != -1) {
@@ -102,6 +113,10 @@ public class Main {
 			System.out.println("6) Salir");
 
 			int opcion = leerOpcion(1, 6);
+			if (opcion == -1) {
+				// se cerró la entrada: se trata igual que "salir" para no perder la sesión
+				opcion = 6;
+			}
 			switch (opcion) {
 			case 1:
 				jugarMinijuego();
@@ -116,9 +131,11 @@ public class Main {
 				mostrarRanking();
 				break;
 			case 5:
-				System.out.println("Sesión terminada.");
+				terminarSesion(nombre);
 				return false;
 			case 6:
+				// salir también termina la sesión y guarda
+				terminarSesion(nombre);
 				return true;
 			}
 		}
@@ -153,6 +170,10 @@ public class Main {
 
 		int puntaje = sistema.jugarMinijuego(indiceMinijuego, posicion, habilidad);
 		System.out.println();
+		if (puntaje == -1) {
+			System.out.println("[!] No se pudo registrar el minijuego. Intente nuevamente.");
+			return;
+		}
 		System.out.println(">> Puntaje obtenido: " + puntaje + " puntos");
 	}
 
@@ -174,9 +195,14 @@ public class Main {
 		}
 		System.out.println("0) Volver");
 
+		if (todosJugados()) {
+			System.out.println("[!] Ya jugaste todos los minijuegos. Termina la sesión (opción 5) para guardar tu puntaje.");
+			return -1;
+		}
+
 		while (true) {
 			int opcion = leerOpcion(0, cantidad);
-			if (opcion == 0) {
+			if (opcion <= 0) {
 				return -1;
 			}
 			if (sistema.minijuegoJugado(opcion - 1)) {
@@ -195,9 +221,15 @@ public class Main {
 	 * @return la posición del monstruo dentro de los disponibles, o -1 si vuelve
 	 */
 	private static int elegirMonstruo() {
+		int disponibles = sistema.getCantidadMonstruosDisponibles();
+		if (disponibles == 0) {
+			// puede pasar si el archivo trae menos monstruos que minijuegos
+			System.out.println("[!] No quedan monstruos disponibles en esta sesión. Volviendo al menú.");
+			return -1;
+		}
+
 		System.out.println();
 		System.out.println("Elige el monstruo en el que te transformarás:");
-		int disponibles = sistema.getCantidadMonstruosDisponibles();
 		for (int i = 0; i < disponibles; i++) {
 			// si hay 10 o más, se rellena el número para que las columnas no se corran
 			String numero = (i + 1) + ")";
@@ -209,6 +241,9 @@ public class Main {
 		System.out.println("0) Volver");
 
 		int opcion = leerOpcion(0, disponibles);
+		if (opcion <= 0) {
+			return -1;
+		}
 		return opcion - 1;
 	}
 
@@ -229,7 +264,7 @@ public class Main {
 		System.out.println("0) No usar habilidad");
 
 		int opcion = leerOpcion(0, habilidades.length);
-		if (opcion == 0) {
+		if (opcion <= 0) {
 			return "Ninguna";
 		}
 
@@ -281,19 +316,103 @@ public class Main {
 		System.out.print(sistema.obtenerRanking());
 	}
 
+	// ---------------- terminar sesión y guardar ----------------
+
+	/**
+	 * termina la sesión, muestra cómo le fue al jugador con su récord y
+	 * reescribe Registros.txt si hubo cambios.
+	 *
+	 * @param nombre nombre del jugador de la sesión
+	 */
+	private static void terminarSesion(String nombre) {
+		int puntajeTotal = sistema.getPuntajeSesion();
+		int recordAnterior = sistema.obtenerRecord(nombre);
+		int resultado = sistema.terminarSesion();
+
+		System.out.println();
+		System.out.println("Sesión terminada. Puntaje total: " + puntajeTotal + " puntos.");
+		switch (resultado) {
+		case 0:
+			System.out.println("No jugaste ningún minijuego, no se guardó registro.");
+			return;
+		case 1:
+			System.out.println("¡Quedaste registrado con " + puntajeTotal + " puntos!");
+			break;
+		case 2:
+			System.out.println("¡Felicidades! Superaste tu récord anterior (" + recordAnterior
+					+ "). Tu nuevo récord es " + puntajeTotal + " puntos.");
+			break;
+		case 3:
+			System.out.println("No superaste tu récord (" + recordAnterior + "). ¡Suerte para la próxima!");
+			break;
+		}
+		guardarRegistros();
+	}
+
+	/**
+	 * reescribe Registros.txt con todos los jugadores y sus récords.
+	 */
+	private static void guardarRegistros() {
+		try {
+			BufferedWriter escritor = new BufferedWriter(new FileWriter("Registros.txt"));
+			for (int i = 0; i < sistema.getCantidadJugadores(); i++) {
+				escritor.write(sistema.obtenerLineaRegistro(i));
+				escritor.newLine();
+			}
+			escritor.close();
+			System.out.println("Registros guardados en Registros.txt.");
+		} catch (IOException e) {
+			System.out.println("[!] No se pudo guardar Registros.txt: " + e.getMessage());
+		}
+	}
+
 	// ---------------- lectura de opciones y formato ----------------
 
 	/**
+	 * @return true si ya no quedan minijuegos pendientes en la sesión
+	 */
+	private static boolean todosJugados() {
+		for (int i = 0; i < sistema.getCantidadMinijuegos(); i++) {
+			if (!sistema.minijuegoJugado(i)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * lee una línea del teclado.
+	 *
+	 * @return la línea leída, o null si la entrada se cerró (por ejemplo con ctrl+d)
+	 */
+	private static String leerLinea() {
+		if (!teclado.hasNextLine()) {
+			return null;
+		}
+		return teclado.nextLine();
+	}
+
+	/**
 	 * lee una opción del teclado hasta que sea un número entre min y max.
+	 * no se cae con letras, decimales, entradas vacías ni números fuera de rango.
 	 *
 	 * @param min opción mínima válida
 	 * @param max opción máxima válida
-	 * @return la opción elegida
+	 * @return la opción elegida, o -1 si la entrada se cerró
 	 */
 	private static int leerOpcion(int min, int max) {
 		while (true) {
 			System.out.print("> ");
-			String linea = teclado.nextLine();
+			String linea = leerLinea();
+			if (linea == null) {
+				System.out.println();
+				System.out.println("[!] Se cerró la entrada de datos.");
+				return -1;
+			}
+			if (linea.length() == 0) {
+				System.out.println("[!] No ingresaste nada. Intente nuevamente.");
+				continue;
+			}
 			try {
 				int opcion = Integer.valueOf(linea);
 				if (opcion >= min && opcion <= max) {
