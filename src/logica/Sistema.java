@@ -136,25 +136,26 @@ public interface Sistema {
 
 	/**
 	 * @param indice posición del minijuego, entre 0 y getCantidadMinijuegos() - 1
-	 * @return el nombre del minijuego
+	 * @return el nombre del minijuego, o "" si el índice no existe
 	 */
 	String obtenerNombreMinijuego(int indice);
 
 	/**
 	 * @param indice posición del minijuego, entre 0 y getCantidadMinijuegos() - 1
-	 * @return la descripción del minijuego
+	 * @return la descripción del minijuego, o "" si el índice no existe
 	 */
 	String obtenerDescripcionMinijuego(int indice);
 
 	/**
 	 * @param indice posición del minijuego, entre 0 y getCantidadMinijuegos() - 1
-	 * @return true si el minijuego ya se jugó en esta sesión
+	 * @return true si el minijuego ya se jugó en esta sesión (false si el índice no existe)
 	 */
 	boolean minijuegoJugado(int indice);
 
 	/**
 	 * @param indice posición del minijuego, entre 0 y getCantidadMinijuegos() - 1
 	 * @return el puntaje que se sacó en ese minijuego, o -1 si sigue pendiente
+	 *         o el índice no existe
 	 */
 	int obtenerPuntajeMinijuego(int indice);
 
@@ -170,7 +171,7 @@ public interface Sistema {
 	 *
 	 * @param posicion posición dentro de los disponibles, entre 0 y
 	 *                 getCantidadMonstruosDisponibles() - 1
-	 * @return los datos del monstruo en una línea
+	 * @return los datos del monstruo en una línea, o "" si la posición no existe
 	 */
 	String obtenerDatosMonstruoDisponible(int posicion);
 
@@ -179,7 +180,7 @@ public interface Sistema {
 	 *
 	 * @param indiceMinijuego posición del minijuego
 	 * @param posicion        posición del monstruo dentro de los disponibles
-	 * @return el potencial en double
+	 * @return el potencial en double, o 0 si el minijuego o el monstruo no existen
 	 */
 	double calcularPotencial(int indiceMinijuego, int posicion);
 
@@ -188,7 +189,7 @@ public interface Sistema {
 	 *
 	 * @param posicion posición del monstruo dentro de los disponibles
 	 * @return los nombres de sus habilidades ("Morder", "Volar", "Regenerarse"
-	 *         o "Enfurecerse")
+	 *         o "Enfurecerse"). si la posición no existe, un arreglo vacío
 	 */
 	String[] obtenerHabilidades(int posicion);
 
@@ -197,7 +198,7 @@ public interface Sistema {
 	 *
 	 * @param posicion  posición del monstruo dentro de los disponibles
 	 * @param habilidad nombre de la habilidad, debe ser una que tenga el monstruo
-	 * @return el mensaje que dice el monstruo al usarla
+	 * @return el mensaje que dice el monstruo al usarla, o "" si no la tiene
 	 */
 	String usarHabilidad(int posicion, String habilidad);
 
@@ -221,8 +222,11 @@ public interface Sistema {
 	 *
 	 * @param indiceMinijuego posición del minijuego
 	 * @param posicion        posición del monstruo dentro de los disponibles
-	 * @param habilidad       habilidad usada, o "Ninguna"
-	 * @return el puntaje obtenido: Math.round(potencial x 10 x multiplicador)
+	 * @param habilidad       habilidad usada, o "Ninguna". si el monstruo no
+	 *                        tiene esa habilidad, se toma como "Ninguna"
+	 * @return el puntaje obtenido: Math.round(potencial x 10 x multiplicador),
+	 *         o -1 si no se cumple el contrato (sin sesión, minijuego repetido
+	 *         o inexistente, o monstruo no disponible)
 	 */
 	int jugarMinijuego(int indiceMinijuego, int posicion, String habilidad);
 
@@ -284,7 +288,7 @@ public interface Sistema {
 	 * retorna un jugador en el formato de Registros.txt (Jugador;PuntajeMaximo).
 	 *
 	 * @param indice posición del jugador, entre 0 y getCantidadJugadores() - 1
-	 * @return la línea para guardar en el archivo
+	 * @return la línea para guardar en el archivo, o "" si el índice no existe
 	 */
 	String obtenerLineaRegistro(int indice);
 }

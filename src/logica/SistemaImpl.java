@@ -129,6 +129,10 @@ public class SistemaImpl implements Sistema {
 
 	@Override
 	public void iniciarSesion(String nombre) {
+		// programación defensiva: no se inicia sesión con un nombre inválido
+		if (nombre == null || nombre.length() == 0 || nombre.indexOf(";") != -1) {
+			return;
+		}
 		jugadorActual = nombre;
 		// sesión nueva: sin jugadas, así todo queda pendiente y disponible
 		historial.clear();
@@ -152,21 +156,33 @@ public class SistemaImpl implements Sistema {
 
 	@Override
 	public String obtenerNombreMinijuego(int indice) {
+		if (!minijuegoValido(indice)) {
+			return "";
+		}
 		return minijuegos.get(indice).getNombre();
 	}
 
 	@Override
 	public String obtenerDescripcionMinijuego(int indice) {
+		if (!minijuegoValido(indice)) {
+			return "";
+		}
 		return minijuegos.get(indice).getDescripcion();
 	}
 
 	@Override
 	public boolean minijuegoJugado(int indice) {
+		if (!minijuegoValido(indice)) {
+			return false;
+		}
 		return buscarJugada(minijuegos.get(indice)) != null;
 	}
 
 	@Override
 	public int obtenerPuntajeMinijuego(int indice) {
+		if (!minijuegoValido(indice)) {
+			return -1;
+		}
 		Jugada jugada = buscarJugada(minijuegos.get(indice));
 		if (jugada == null) {
 			return -1;
@@ -189,24 +205,38 @@ public class SistemaImpl implements Sistema {
 
 	@Override
 	public String obtenerDatosMonstruoDisponible(int posicion) {
-		return buscarMonstruoDisponible(posicion).toString();
+		Monstruo monstruo = buscarMonstruoDisponible(posicion);
+		if (monstruo == null) {
+			return "";
+		}
+		return monstruo.toString();
 	}
 
 	@Override
 	public double calcularPotencial(int indiceMinijuego, int posicion) {
 		Monstruo monstruo = buscarMonstruoDisponible(posicion);
+		if (monstruo == null || !minijuegoValido(indiceMinijuego)) {
+			return 0;
+		}
 		// polimorfismo + visitor: el minijuego no pregunta el tipo del monstruo
 		return minijuegos.get(indiceMinijuego).calcularPotencial(monstruo);
 	}
 
 	@Override
 	public String[] obtenerHabilidades(int posicion) {
-		return habilidadesDe(buscarMonstruoDisponible(posicion));
+		Monstruo monstruo = buscarMonstruoDisponible(posicion);
+		if (monstruo == null) {
+			return new String[0];
+		}
+		return habilidadesDe(monstruo);
 	}
 
 	@Override
 	public String usarHabilidad(int posicion, String habilidad) {
 		Monstruo monstruo = buscarMonstruoDisponible(posicion);
+		if (monstruo == null || habilidad == null) {
+			return "";
+		}
 
 		// cast a la interfaz de la habilidad elegida para escuchar su mensaje
 		if (habilidad.equals("Morder") && monstruo instanceof Mordedor) {
@@ -226,14 +256,29 @@ public class SistemaImpl implements Sistema {
 
 	@Override
 	public boolean esHabilidadPremiada(int indiceMinijuego, String habilidad) {
+		if (!minijuegoValido(indiceMinijuego)) {
+			return false;
+		}
 		// la habilidad no sabe si sirve, eso lo decide el minijuego
 		return minijuegos.get(indiceMinijuego).getHabilidadPremiada().equals(habilidad);
 	}
 
 	@Override
 	public int jugarMinijuego(int indiceMinijuego, int posicion, String habilidad) {
+		// se revisa el contrato antes de jugar: sesión iniciada, minijuego
+		// pendiente y monstruo disponible
+		if (jugadorActual == null || !minijuegoValido(indiceMinijuego) || minijuegoJugado(indiceMinijuego)) {
+			return -1;
+		}
 		Minijuego minijuego = minijuegos.get(indiceMinijuego);
 		Monstruo monstruo = buscarMonstruoDisponible(posicion);
+		if (monstruo == null) {
+			return -1;
+		}
+		// si la habilidad no es del monstruo, cuenta como que no usó ninguna
+		if (habilidad == null || !tieneHabilidad(monstruo, habilidad)) {
+			habilidad = "Ninguna";
+		}
 
 		double potencial = minijuego.calcularPotencial(monstruo);
 		double multiplicador = 1.0;
@@ -318,6 +363,9 @@ public class SistemaImpl implements Sistema {
 
 	@Override
 	public int terminarSesion() {
+		if (jugadorActual == null) {
+			return 0;
+		}
 		int resultado;
 		int puntaje = getPuntajeSesion();
 		Jugador jugador = buscarJugador(jugadorActual);
@@ -341,6 +389,9 @@ public class SistemaImpl implements Sistema {
 
 	@Override
 	public String obtenerLineaRegistro(int indice) {
+		if (indice < 0 || indice >= jugadores.size()) {
+			return "";
+		}
 		Jugador jugador = jugadores.get(indice);
 		return jugador.getNombre() + ";" + jugador.getPuntajeMaximo();
 	}
@@ -433,6 +484,26 @@ public class SistemaImpl implements Sistema {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * @return true si el índice corresponde a un minijuego que existe
+	 */
+	private boolean minijuegoValido(int indice) {
+		return indice >= 0 && indice < minijuegos.size();
+	}
+
+	/**
+	 * @return true si el monstruo tiene la habilidad con ese nombre
+	 */
+	private boolean tieneHabilidad(Monstruo monstruo, String habilidad) {
+		String[] habilidades = habilidadesDe(monstruo);
+		for (int i = 0; i < habilidades.length; i++) {
+			if (habilidades[i].equals(habilidad)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
